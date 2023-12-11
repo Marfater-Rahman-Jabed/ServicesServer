@@ -74,6 +74,33 @@ async function run() {
             const result = await UserCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+        app.put('/updateDatabase/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const bodyData = req.body
+            // const query = {
+            //     email
+            // }
+            // const filter = { email: `${query}` };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    data: bodyData.data
+                }
+            }
+            const result = await databaseCollection.updateOne(filter, updateDoc, options)
+            res.send(result);
+        })
+
+        app.delete('/deleteDatabase/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: new ObjectId(id)
+            }
+            const result = await databaseCollection.deleteOne(query)
+            res.send(result);
+
+        })
 
     } finally {
         // Ensures that the client will close when you finish/error

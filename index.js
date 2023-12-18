@@ -159,6 +159,27 @@ async function run() {
             const result = await excelCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+        app.put('/UpgradeStorage', async (req, res) => {
+            const email = req.body.clientEmail;
+            const filter = { email: email };
+            const bodyData = req.body
+            // console.log(email)
+            const getUser = await UserCollection.findOne(filter)
+            // console.log(getUser)
+            const newStorage = getUser.storage + bodyData.storage
+            // const query = {
+            //     email
+            // }
+            // const filter = { email: `${query}` };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    storage: newStorage
+                }
+            }
+            const result = await UserCollection.updateOne(filter, updateDoc, options)
+            res.send(result);
+        })
 
         app.delete('/deleteDatabase/:id', async (req, res) => {
             const id = req.params.id;

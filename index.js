@@ -27,6 +27,7 @@ async function run() {
         const databaseCollection = client.db('MyService').collection('databaseCollection')
         const UserCollection = client.db('MyService').collection('UserCollection')
         const excelCollection = client.db('MyService').collection('excelCollection')
+        const secondDatabaseCollection = client.db('MyService').collection('secondDatabaseCollection')
 
         app.get('/user/:email', async (req, res) => {
             const email = req.params.email;
@@ -54,6 +55,15 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
+        // app.get('/allTemplate/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const query = {
+        //         clientEmail: email
+        //     }
+        //     const cursor = UserCollection.find(query).sort({ _id: -1 })
+        //     const result = await cursor.toArray()
+        //     res.send(result)
+        // })
         app.get('/excelDetails/:id', async (req, res) => {
             const id = req.params.id;
             const query = {
@@ -63,6 +73,19 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
+        app.get('/allSecondDatabaseData/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                templateId: id
+            }
+            const cursor = secondDatabaseCollection.find(query).sort({ _id: -1 })
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+
+
+
+
 
         app.post('/addUser', async (req, res) => {
             const query = req.body;
@@ -106,6 +129,44 @@ async function run() {
             const result = await excelCollection.insertOne(query)
             res.send(result)
         })
+        app.post('/uploadSecondDatabase', async (req, res) => {
+            // const query = req.body;
+            // const getUser = await UserCollection.findOne({ email: query.clientEmail })
+
+            // const newStorage = getUser.storage - query.size
+            // console.log(newStorage)
+
+            // const updateStorage = await UserCollection.updateOne({ email: query.clientEmail }, {
+            //     $set: {
+            //         storage: newStorage
+            //     }
+            // })
+            const query = req.body;
+            const result = await secondDatabaseCollection.insertOne(query)
+            res.send(result)
+        })
+        app.post('/uploadSecondDatabasefromExcel', async (req, res) => {
+            // const query = req.body;
+            // const getUser = await UserCollection.findOne({ email: query.clientEmail })
+
+            // const newStorage = getUser.storage - query.size
+            // console.log(newStorage)
+
+            // const updateStorage = await UserCollection.updateOne({ email: query.clientEmail }, {
+            //     $set: {
+            //         storage: newStorage
+            //     }
+            // })
+            const query = req.body;
+            const options = { ordered: true };
+            const result = await secondDatabaseCollection.insertMany(query, options)
+            res.send(result)
+        })
+
+
+
+
+
 
         app.put('/templateUpdate/:id', async (req, res) => {
             const id = req.params.id;
@@ -120,6 +181,23 @@ async function run() {
                 $set: {
                     colNo: bodyData.colNo,
                     colName: bodyData.filteredArray
+                }
+            }
+            const result = await UserCollection.updateOne(filter, updateDoc, options)
+            res.send(result);
+        })
+        app.put('/templateCreated/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const bodyData = req.body
+            // const query = {
+            //     email
+            // }
+            // const filter = { email: `${query}` };
+            const options = { upsert: true };
+            const updateDoc = {
+                $push: {
+                    templateList: { _id: new ObjectId(), colNo: bodyData.colNo, colName: bodyData.filteredArray, tempName: bodyData.tempName }
                 }
             }
             const result = await UserCollection.updateOne(filter, updateDoc, options)
@@ -180,6 +258,10 @@ async function run() {
             const result = await UserCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+
+
+
+
 
         app.delete('/deleteDatabase/:id', async (req, res) => {
             const id = req.params.id;

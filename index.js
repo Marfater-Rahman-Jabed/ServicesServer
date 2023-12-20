@@ -29,6 +29,10 @@ async function run() {
         const excelCollection = client.db('MyService').collection('excelCollection')
         const secondDatabaseCollection = client.db('MyService').collection('secondDatabaseCollection')
 
+
+        // GET Operation Start Here
+
+
         app.get('/user/:email', async (req, res) => {
             const email = req.params.email;
             const query = {
@@ -37,6 +41,8 @@ async function run() {
             const result = await UserCollection.findOne(query)
             res.send(result)
         })
+
+
         app.get('/datafind/:email', async (req, res) => {
             const email = req.params.email;
             const query = {
@@ -46,6 +52,8 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
+
+
         app.get('/excelfind/:email', async (req, res) => {
             const email = req.params.email;
             const query = {
@@ -55,15 +63,8 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
-        // app.get('/allTemplate/:email', async (req, res) => {
-        //     const email = req.params.email;
-        //     const query = {
-        //         clientEmail: email
-        //     }
-        //     const cursor = UserCollection.find(query).sort({ _id: -1 })
-        //     const result = await cursor.toArray()
-        //     res.send(result)
-        // })
+
+
         app.get('/excelDetails/:id', async (req, res) => {
             const id = req.params.id;
             const query = {
@@ -73,6 +74,8 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
+
+
         app.get('/allSecondDatabaseData/:id', async (req, res) => {
             const id = req.params.id;
             const query = {
@@ -83,7 +86,11 @@ async function run() {
             res.send(result)
         })
 
+        // GET Operation END Here
 
+
+
+        // POST Operation Started Here
 
 
 
@@ -92,10 +99,12 @@ async function run() {
             const result = await UserCollection.insertOne(query)
             res.send(result)
         })
+
+
         app.post('/uploadDatabase', async (req, res) => {
             const query = req.body;
 
-            //now calculated the data size which i inserted
+            //start calculated data size which are uploaded & remove storage to the user
 
             const sizeInBytes = Object.keys(query).reduce(function (acc, key) {
                 return acc + (key.length + JSON.stringify(query[key]).length);
@@ -112,11 +121,18 @@ async function run() {
                 }
             })
 
+            //end calculated data size which are uploaded & remove storage to the user
+
             const result = await databaseCollection.insertOne(query)
             res.send(result)
         })
+
+
         app.post('/uploadExcel', async (req, res) => {
             const query = req.body;
+
+            //start calculated data size which are uploaded & remove storage to the user
+
             const getUser = await UserCollection.findOne({ email: query.clientEmail })
 
             const newStorage = getUser.storage - query.size
@@ -126,46 +142,73 @@ async function run() {
                     storage: newStorage
                 }
             })
+
+
+            //end calculated data size which are uploaded & remove storage to the user
+
             const result = await excelCollection.insertOne(query)
             res.send(result)
         })
-        app.post('/uploadSecondDatabase', async (req, res) => {
-            // const query = req.body;
-            // const getUser = await UserCollection.findOne({ email: query.clientEmail })
 
-            // const newStorage = getUser.storage - query.size
+
+        app.post('/uploadSecondDatabase', async (req, res) => {
+
+            const query = req.body;
+
+            //start calculated data size which are uploaded & remove storage to the user
+
+            const getUser = await UserCollection.findOne({ email: query.clientEmail })
+
+            const sizeInBytes = Object.keys(query).reduce(function (acc, key) {
+                return acc + (key.length + JSON.stringify(query[key]).length);
+            }, 0);
+            const newStorage = getUser.storage - (sizeInBytes / 1024)
             // console.log(newStorage)
 
-            // const updateStorage = await UserCollection.updateOne({ email: query.clientEmail }, {
-            //     $set: {
-            //         storage: newStorage
-            //     }
-            // })
-            const query = req.body;
+            const updateStorage = await UserCollection.updateOne({ email: query.clientEmail }, {
+                $set: {
+                    storage: newStorage
+                }
+            })
+
+            //end calculated data size which are uploaded & remove storage to the user
+
             const result = await secondDatabaseCollection.insertOne(query)
             res.send(result)
         })
-        app.post('/uploadSecondDatabasefromExcel', async (req, res) => {
-            // const query = req.body;
-            // const getUser = await UserCollection.findOne({ email: query.clientEmail })
 
-            // const newStorage = getUser.storage - query.size
+
+        app.post('/uploadSecondDatabasefromExcel', async (req, res) => {
+            const query = req.body;
+
+            //start calculated data size which are uploaded & remove storage to the user
+
+            const getUser = await UserCollection.findOne({ email: query.clientEmail })
+            // console.log(getUser)
+            const newStorage = getUser?.storage - query?.size
             // console.log(newStorage)
 
-            // const updateStorage = await UserCollection.updateOne({ email: query.clientEmail }, {
-            //     $set: {
-            //         storage: newStorage
-            //     }
-            // })
-            const query = req.body;
+            const updateStorage = await UserCollection.updateOne({ email: query.clientEmail }, {
+                $set: {
+                    storage: newStorage
+                }
+            })
+
+            //end calculated data size which are uploaded & remove storage to the user
+
             const options = { ordered: true };
-            const result = await secondDatabaseCollection.insertMany(query, options)
+            const result = await secondDatabaseCollection.insertMany(query.convertedData, options)
             res.send(result)
         })
 
 
 
+        // POST Operation End Here
 
+
+
+
+        // PUT Operation Start Here
 
 
         app.put('/templateUpdate/:id', async (req, res) => {
@@ -186,6 +229,8 @@ async function run() {
             const result = await UserCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+
+
         app.put('/templateCreated/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
@@ -203,14 +248,13 @@ async function run() {
             const result = await UserCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+
+
         app.put('/updateDatabase/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const bodyData = req.body
-            // const query = {
-            //     email
-            // }
-            // const filter = { email: `${query}` };
+
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
@@ -220,14 +264,13 @@ async function run() {
             const result = await databaseCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+
+
         app.put('/updateExcelSheetName/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const bodyData = req.body
-            // const query = {
-            //     email
-            // }
-            // const filter = { email: `${query}` };
+
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
@@ -237,6 +280,8 @@ async function run() {
             const result = await excelCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+
+
         app.put('/updateSecondDatabaseData/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
@@ -275,6 +320,13 @@ async function run() {
         })
 
 
+        // PUT Operation End Here
+
+
+
+
+
+        // DELETE Operation Start Here
 
 
 
@@ -284,7 +336,7 @@ async function run() {
                 _id: new ObjectId(id)
             }
 
-            //start calculated data size which are deleted
+            //start calculated data size which are deleted & add storage to the user
 
             const getDatabaseData = await databaseCollection.findOne(query)
             // console.log((getDatabaseData))
@@ -315,14 +367,15 @@ async function run() {
             res.send(result);
 
         })
+
         app.delete('/deleteSecondDatabase/:id', async (req, res) => {
             const id = req.params.id;
             const query = {
                 _id: new ObjectId(id)
             }
 
-            //start calculated data size which are deleted
-            // console.log(query)
+            //start calculated data size which are deleted & add storage to the user
+
             const getDatabaseData = await secondDatabaseCollection.findOne(query)
             console.log((getDatabaseData))
 
@@ -336,7 +389,6 @@ async function run() {
             }, 0);
 
             const getUserData = await UserCollection.findOne({ email: getDatabaseData.clientEmail })
-
 
             const newStorage = getUserData.storage + (sizeInBytes / 1024)
 
@@ -352,12 +404,25 @@ async function run() {
             res.send(result);
 
         })
+
+        app.delete('/deleteTemplateDatabase/:id', async (req, res) => {
+            const id = req.params.id;
+
+            const updatedTemplateList = UserCollection.updateMany({}, { $pull: { templateList: { _id: new ObjectId(id) } } })
+            // console.log(updatedTemplateList)
+
+            const result = await secondDatabaseCollection.deleteMany({ templateId: id })
+            res.send(result)
+
+        })
+
         app.delete('/deleteExcelSheet/:id', async (req, res) => {
             const id = req.params.id;
             const query = {
                 _id: new ObjectId(id)
             }
 
+            //start calculated data size which are deleted & add storage to the user
 
 
             const getExcelData = await excelCollection.findOne(query)
@@ -372,11 +437,16 @@ async function run() {
                 }
             })
 
+            //end calculated data size which are deleted & add storage to the user
 
             const result = await excelCollection.deleteOne(query)
             res.send(result);
 
         })
+
+
+
+        // DELETE Operation END Here
 
     } finally {
         // Ensures that the client will close when you finish/error

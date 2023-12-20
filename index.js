@@ -300,6 +300,43 @@ async function run() {
             res.send(result);
 
         })
+        app.delete('/deleteSecondDatabase/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: new ObjectId(id)
+            }
+
+            //start calculated data size which are deleted
+            // console.log(query)
+            const getDatabaseData = await secondDatabaseCollection.findOne(query)
+            console.log((getDatabaseData))
+
+            const deletedDataIem = {
+                getDatabaseData
+
+            }
+
+            const sizeInBytes = Object.keys(deletedDataIem).reduce(function (acc, key) {
+                return acc + (key.length + JSON.stringify(deletedDataIem[key]).length);
+            }, 0);
+
+            const getUserData = await UserCollection.findOne({ email: getDatabaseData.clientEmail })
+
+
+            const newStorage = getUserData.storage + (sizeInBytes / 1024)
+
+            const updateStorage = await UserCollection.updateOne({ email: getDatabaseData.clientEmail }, {
+                $set: {
+                    storage: newStorage
+                }
+            })
+
+            //end calculated data size which are deleted
+
+            const result = await secondDatabaseCollection.deleteOne(query)
+            res.send(result);
+
+        })
         app.delete('/deleteExcelSheet/:id', async (req, res) => {
             const id = req.params.id;
             const query = {

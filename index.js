@@ -237,6 +237,21 @@ async function run() {
             const result = await excelCollection.updateOne(filter, updateDoc, options)
             res.send(result);
         })
+        app.put('/updateSecondDatabaseData/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const bodyData = req.body
+            // console.log(bodyData)
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    data: bodyData
+                }
+            }
+            const result = await secondDatabaseCollection.updateOne(filter, updateDoc, options)
+            res.send(result);
+        })
+
         app.put('/UpgradeStorage', async (req, res) => {
             const email = req.body.clientEmail;
             const filter = { email: email };

@@ -408,8 +408,41 @@ async function run() {
         app.delete('/deleteTemplateDatabase/:id', async (req, res) => {
             const id = req.params.id;
 
+            const query = {
+                templateId: id
+            }
+            const collectDeletedItem = secondDatabaseCollection.find(query)
+            const collectedArray = await collectDeletedItem.toArray()
+            // console.log(collectedArray[0].clientEmail)
+
+            const deletedDataIem = {
+                ...collectedArray
+            }
+            const sizeInBytes = Object.keys(deletedDataIem).reduce(function (acc, key) {
+                return acc + (key.length + JSON.stringify(deletedDataIem[key]).length);
+            }, 0);
+
+
+            // console.log(sizeInBytes / 1024)
+
+            if (collectedArray[0]?.clientEmail) {
+
+                const getUserData = await UserCollection.findOne({ email: collectedArray[0].clientEmail })
+
+                const newStorage = getUserData.storage + (sizeInBytes / 1024)
+
+                const updateStorage = await UserCollection.updateOne({ email: collectedArray[0].clientEmail }, {
+                    $set: {
+                        storage: newStorage
+                    }
+                })
+
+            }
+
+
+
+
             const updatedTemplateList = UserCollection.updateMany({}, { $pull: { templateList: { _id: new ObjectId(id) } } })
-            // console.log(updatedTemplateList)
 
             const result = await secondDatabaseCollection.deleteMany({ templateId: id })
             res.send(result)

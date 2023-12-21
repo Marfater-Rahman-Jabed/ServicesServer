@@ -86,6 +86,7 @@ async function run() {
             res.send(result)
         })
 
+
         // GET Operation END Here
 
 
@@ -136,7 +137,7 @@ async function run() {
             const getUser = await UserCollection.findOne({ email: query.clientEmail })
 
             const newStorage = getUser.storage - query.size
-            console.log(newStorage)
+            // console.log(newStorage)
             const updateStorage = await UserCollection.updateOne({ email: query.clientEmail }, {
                 $set: {
                     storage: newStorage
@@ -203,7 +204,9 @@ async function run() {
 
 
 
+
         // POST Operation End Here
+
 
 
 
@@ -320,6 +323,7 @@ async function run() {
         })
 
 
+
         // PUT Operation End Here
 
 
@@ -377,7 +381,7 @@ async function run() {
             //start calculated data size which are deleted & add storage to the user
 
             const getDatabaseData = await secondDatabaseCollection.findOne(query)
-            console.log((getDatabaseData))
+            // console.log((getDatabaseData))
 
             const deletedDataIem = {
                 getDatabaseData
@@ -439,9 +443,6 @@ async function run() {
 
             }
 
-
-
-
             const updatedTemplateList = UserCollection.updateMany({}, { $pull: { templateList: { _id: new ObjectId(id) } } })
 
             const result = await secondDatabaseCollection.deleteMany({ templateId: id })
@@ -458,12 +459,13 @@ async function run() {
             //start calculated data size which are deleted & add storage to the user
 
 
+
             const getExcelData = await excelCollection.findOne(query)
 
             const getUserData = await UserCollection.findOne({ email: getExcelData.clientEmail })
-
+            // console.log
             const newStorage = getUserData.storage + getExcelData.size
-            console.log(newStorage)
+            // console.log(newStorage)
             const updateStorage = await UserCollection.updateOne({ email: getExcelData.clientEmail }, {
                 $set: {
                     storage: newStorage

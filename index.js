@@ -11,7 +11,7 @@ app.use(cors())
 
 
 const uri = `mongodb+srv://${process.env.DB_User}:${process.env.DB_Pass}@cluster0.4jznvny.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri)
+// console.log(uri)
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -28,9 +28,10 @@ async function run() {
         const UserCollection = client.db('MyService').collection('UserCollection')
         const excelCollection = client.db('MyService').collection('excelCollection')
         const secondDatabaseCollection = client.db('MyService').collection('secondDatabaseCollection')
+        const HistoryCollection = client.db('MyService').collection('HistoryCollection')
 
 
-        // GET Operation Start Here
+        // <=.............. GET Operation Start Here ...............=>
 
 
         app.get('/user/:email', async (req, res) => {
@@ -85,13 +86,36 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
+        app.get('/allSecondDatabaseDataForChart/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = {
+                clientEmail: email
+            }
+            const cursor = secondDatabaseCollection.find(query).sort({ _id: -1 })
+            const result = await cursor.toArray()
+            res.send(result)
+        })
 
 
-        // GET Operation END Here
+        app.get('/historyFind/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = {
+                clientEmail: email
+            }
+            const cursor = HistoryCollection.find(query).sort({ _id: -1 })
+            const result = await cursor.toArray()
+            res.send(result)
+        })
 
 
 
-        // POST Operation Started Here
+        // <=.............. GET Operation End Here ...............=>
+
+
+
+
+
+        // <=.............. POST Operation Start Here ...............=>
 
 
 
@@ -205,13 +229,13 @@ async function run() {
 
 
 
-        // POST Operation End Here
+        // <=.............. POST Operation End Here ...............=>
 
 
 
 
 
-        // PUT Operation Start Here
+        // <=.............. PUT Operation Start Here ...............=>
 
 
         app.put('/templateUpdate/:id', async (req, res) => {
@@ -305,6 +329,8 @@ async function run() {
             const filter = { email: email };
             const bodyData = req.body
             // console.log(email)
+
+            const addhistory = HistoryCollection.insertOne(bodyData)
             const getUser = await UserCollection.findOne(filter)
             // console.log(getUser)
             const newStorage = getUser.storage + bodyData.storage
@@ -324,13 +350,13 @@ async function run() {
 
 
 
-        // PUT Operation End Here
+        // <=.............. PUT Operation End Here ...............=>
 
 
 
 
 
-        // DELETE Operation Start Here
+        // <=.............. DELETE Operation Start Here ...............=>
 
 
 
@@ -481,7 +507,13 @@ async function run() {
 
 
 
-        // DELETE Operation END Here
+
+
+        // <=.............. DELETE Operation End Here ...............=>
+
+
+
+
 
     } finally {
         // Ensures that the client will close when you finish/error

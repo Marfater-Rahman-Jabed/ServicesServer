@@ -469,6 +469,7 @@ async function run() {
 
             }
 
+            //here pull use for delete
             const updatedTemplateList = UserCollection.updateMany({}, { $pull: { templateList: { _id: new ObjectId(id) } } })
 
             const result = await secondDatabaseCollection.deleteMany({ templateId: id })

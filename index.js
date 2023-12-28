@@ -324,6 +324,20 @@ async function run() {
             res.send(result);
         })
 
+        app.put('/UpdateColumnField', async (req, res) => {
+            const email = req.body.clientEmail;
+            const query = req.body;
+
+            const filter = {
+                email: email,
+                "templateList._id": new ObjectId(query.updatedId)
+            }
+            // console.log(filter, query.colName)
+            const options = { upsert: true };
+            const updateDoc = { $set: { "templateList.$.colName": query.colName } }
+            const result = await UserCollection.updateOne(filter, updateDoc, options)
+            res.send(result);
+        })
         app.put('/UpgradeStorage', async (req, res) => {
             const email = req.body.clientEmail;
             const filter = { email: email };
